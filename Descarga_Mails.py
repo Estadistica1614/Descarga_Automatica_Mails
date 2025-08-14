@@ -4,7 +4,6 @@ from email.header import decode_header
 from datetime import datetime
 import os
 import re
-import zipfile
 import shutil
 import hashlib
 
@@ -96,7 +95,7 @@ def descargar_adjuntos(turno):
                     continue
                 hashes_vistos.add(hash_actual)
 
-                ruta_archivo = os.path.join(CARPETA_TEMP, nombre_archivo)
+                ruta_archivo = os.path.join(CARPETA_NEXTCLOUD, nombre_archivo)
                 base, extension = os.path.splitext(ruta_archivo)
                 contador = 1
                 while os.path.exists(ruta_archivo):
@@ -111,15 +110,6 @@ def descargar_adjuntos(turno):
 
     if archivos_guardados:
         ahora = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        nombre_zip = f"adjuntos_{ahora}.zip"
-        ruta_zip = os.path.join(CARPETA_NEXTCLOUD, nombre_zip)
-
-        with zipfile.ZipFile(ruta_zip, "w") as zipf:
-            for archivo in archivos_guardados:
-                zipf.write(os.path.join(CARPETA_TEMP, archivo), arcname=archivo)
-
-        print(f"✅ ZIP creado: {ruta_zip}")
-
         # Crear log
         nombre_log = f"log_{ahora}.txt"
         ruta_log = os.path.join(CARPETA_NEXTCLOUD, nombre_log)
@@ -127,11 +117,12 @@ def descargar_adjuntos(turno):
             for nombre in archivos_guardados:
                 f.write(f"{nombre}\n")
 
+        print(f"✅ Archivos guardados directamente en la nube.")
         print(f"📝 Log creado: {ruta_log}")
     else:
         print("⚠️ No se encontraron adjuntos para guardar.")
 
-    # Limpiar carpeta temporal para próxima ejecución
+    # Limpiar carpeta temporal (por si queda algo)
     shutil.rmtree(CARPETA_TEMP)
     os.makedirs(CARPETA_TEMP, exist_ok=True)
 

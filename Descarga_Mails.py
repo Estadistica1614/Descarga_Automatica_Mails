@@ -13,11 +13,19 @@ CONTRASEÑA = "Novedades03"
 SERVIDOR_IMAP = "10.1.150.25"
 
 CARPETA_NEXTCLOUD = os.path.expanduser("~/nextcloud/PARTES")
+CARPETA_ESPECIALES = os.path.expanduser("~/nextcloud/Especiales")  # <-- nueva carpeta
 CARPETA_TEMP = os.path.expanduser("~/descarga_temp")
 os.makedirs(CARPETA_TEMP, exist_ok=True)
+os.makedirs(CARPETA_ESPECIALES, exist_ok=True)
 
 # Extensiones que no se deben descargar (imágenes y videos)
 EXTENSIONES_IGNORADAS = ['.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mkv']
+
+# Correos que deben ir a la carpeta especial
+CORREOS_ESPECIALES = {
+    "ensayosyestandarespericiales@policiafederal.gov.ar",
+    "sfb1303_salaoperativa@policiafederal.gov.ar"
+}
 
 # === FUNCIONES AUXILIARES ===
 
@@ -58,11 +66,18 @@ def descargar_adjuntos(turno):
         raw_email = datos[0][1]
         msg = email.message_from_bytes(raw_email)
 
+        # === Obtener remitente ===
+        remitente = msg.get("From", "").lower()
+        print(f"✉ Procesando correo de: {remitente}")
+
+        # Determinar carpeta destino según remitente
+        carpeta_destino = CARPETA_ESPECIALES if any(r in remitente for r in CORREOS_ESPECIALES) else CARPETA_NEXTCLOUD
+
         asunto = decode_header(msg["Subject"])[0][0]
         if isinstance(asunto, bytes):
             asunto = asunto.decode(errors="ignore")
 
-        print(f"✉ Procesando: {asunto}")
+        print(f"   📌 Asunto: {asunto}")
 
         for parte in msg.walk():
             if parte.get_content_maintype() == "multipart":
@@ -95,7 +110,7 @@ def descargar_adjuntos(turno):
                     continue
                 hashes_vistos.add(hash_actual)
 
-                ruta_archivo = os.path.join(CARPETA_NEXTCLOUD, nombre_archivo)
+                ruta_archivo = os.path.join(carpeta_destino, nombre_archivo)
                 base, extension = os.path.splitext(ruta_archivo)
                 contador = 1
                 while os.path.exists(ruta_archivo):
@@ -117,7 +132,7 @@ def descargar_adjuntos(turno):
             for nombre in archivos_guardados:
                 f.write(f"{nombre}\n")
 
-        print(f"✅ Archivos guardados directamente en la nube.")
+        print(f"✅ Archivos guardados en sus carpetas correspondientes.")
         print(f"📝 Log creado: {ruta_log}")
     else:
         print("⚠️ No se encontraron adjuntos para guardar.")

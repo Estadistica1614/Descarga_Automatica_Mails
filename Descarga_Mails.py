@@ -9,7 +9,7 @@ import hashlib
 
 # === CONFIGURACIÓN GENERAL ===
 USUARIO = "partes@policiafederal.gov.ar"
-CONTRASEÑA = "Novedades03"
+CONTRASEÑA = "Novedades04"
 SERVIDOR_IMAP = "10.1.150.25"
 
 CARPETA_NEXTCLOUD = os.path.expanduser("~/nextcloud/PARTES")
